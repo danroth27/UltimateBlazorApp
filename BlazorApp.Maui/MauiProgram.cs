@@ -1,4 +1,5 @@
 ﻿using BlazorApp;
+using BlazorApp.Maui.Helpers;
 using Microsoft.Extensions.Logging;
 
 namespace BlazorApp.Maui;
@@ -20,7 +21,7 @@ public static class MauiProgram
 		builder.Services.AddBlazorWebViewDeveloperTools();
 		builder.Logging.AddDebug();
 #endif
-        builder.Services.AddSingleton(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7066") });
+        builder.Services.AddSingleton(HttpClientHelper.CreateHttpClient());
         builder.Services.AddSingleton<IWeatherService, HttpWeatherService>();
 
         return builder.Build();
