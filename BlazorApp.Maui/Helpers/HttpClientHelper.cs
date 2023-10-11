@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace BlazorApp.Maui.Helpers;
 public class HttpClientHelper
 {
-    public static HttpMessageHandler GetPlatformMessageHandler()
+    public static HttpClient CreateHttpClient()
     {
 #if ANDROID
         var handler = new Xamarin.Android.Net.AndroidMessageHandler();
@@ -17,29 +17,22 @@ public class HttpClientHelper
                 return true;
             return errors == System.Net.Security.SslPolicyErrors.None;
         };
-        return handler;
+        var httpClient = new HttpClient(handler);
 #elif IOS
         var handler = new NSUrlSessionHandler
         {
-            TrustOverrideForUrl = IsHttpsLocalhost
+            TrustOverrideForUrl = (sender, url, trust) => url.StartsWith("https://localhost")
         };
-        return handler;
+        var httpClient = new HttpClient(handler);
 #else
-     throw new PlatformNotSupportedException("Only Android and iOS supported.");
-#endif
-    }
-
-#if IOS
-    public static bool IsHttpsLocalhost(NSUrlSessionHandler sender, string url, Security.SecTrust trust)
-    {
-        if (url.StartsWith("https://localhost"))
-            return true;
-        return false;
-    }
+        var httpClient = new HttpClient();
 #endif
 
-    public static HttpClient CreateHttpClient() => new HttpClient(HttpClientHelper.GetPlatformMessageHandler())
-    {
-        BaseAddress = new Uri(DeviceInfo.Platform == DevicePlatform.Android ? "https://10.0.2.2:7066" : "https://localhost:7066")
-    };
+#if ANDROID
+        httpClient.BaseAddress = new Uri("https://10.0.2.2:7066");
+#else
+        httpClient.BaseAddress = new Uri("https://localhost:7066");
+#endif
+        return httpClient;
+    }
 }
